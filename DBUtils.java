@@ -1,3 +1,4 @@
+// Latest Version
 package application;
 
 import java.sql.*;
@@ -7,6 +8,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import dynamic.Expenselist;
+import javafx.scene.chart.XYChart;
 
 class DBUtils{
 	static String username;
@@ -147,11 +149,29 @@ class DBUtils{
 			if(rs.next())
 				me = rs.getDouble(1);
 		}catch(Exception x) {x.printStackTrace();};
+		//System.out.println(fe);
+		//System.out.println(e);
+		//System.out.println(se);
+		//System.out.println(me);
+		//System.out.println(te);
 		food = fe;
 		ent = e;
 		shop = se;
 		misc = me;
 		tran = te;
+		double curr_expense=fe+e+se+me+te;
+		total_expense=total_expense+curr_expense;
+		total_balance=total_balance-curr_expense;
+		try {
+		pscheck = con.prepareStatement("insert into expenditure_details(U_ID,Amount_spent) values(?,?)");
+		pscheck.setInt(1, u_id);
+		pscheck.setDouble(2,total_expense);
+		pscheck.executeUpdate();
+		pscheck = con.prepareStatement("insert into balance_details(U_ID,Balance_Amount) values(?,?)");
+		pscheck.setInt(1, u_id);
+		pscheck.setDouble(2,total_balance);
+		pscheck.executeUpdate();
+		}catch(Exception s) {s.printStackTrace();}
 	}
 	
 	public static void balandexp() {
@@ -176,6 +196,8 @@ class DBUtils{
 			if(rs.next())
 				bal = rs.getDouble(1);
 		}catch(Exception e) {e.printStackTrace();};
+		//System.out.println(exp);
+		//System.out.println(bal);
 		total_expense=exp;
 		total_balance=bal;
 	}
@@ -212,6 +234,13 @@ class DBUtils{
 			pscheck = con.prepareStatement("select time, Amount from debit_details where U_ID = ?");
 			pscheck.setInt(1, u_id);
 			daily_details = pscheck.executeQuery();
+	    	try {
+				while(daily_details.next()) {
+					System.out.println(daily_details.getString(1)+" "+daily_details.getDouble(2));
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 		}catch(Exception e) {e.printStackTrace();}
 	}
 	
@@ -221,40 +250,40 @@ class DBUtils{
 		try {
 			Class.forName("com.mysql.cj.jdbc.Driver");  
 			con=DriverManager.getConnection("jdbc:mysql://localhost:3306/javaproject","root","123456");
-			if(type=="food") {
+			if(type=="Food") {
 				psinsert = con.prepareStatement("insert into food_details values(?,?,?,?)");
 				psinsert.setInt(1, u_id);
 				psinsert.setDouble(2, amt);
 				psinsert.setString(3, time);
 				psinsert.setString(4, date);
-				psinsert.executeQuery();
+				psinsert.executeUpdate();
 			}
 			
-			else if(type=="transportation") {
+			else if(type=="Transportation") {
 				psinsert = con.prepareStatement("insert into transportation_details values(?,?,?,?)");
 				psinsert.setInt(1, u_id);
 				psinsert.setDouble(2, amt);
 				psinsert.setString(3, time);
 				psinsert.setString(4, date);
-				psinsert.executeQuery();
+				psinsert.executeUpdate();
 			}
 			
-			else if(type=="shopping") {
+			else if(type=="Shopping") {
 				psinsert = con.prepareStatement("insert into shopping_details values(?,?,?,?)");
 				psinsert.setInt(1, u_id);
 				psinsert.setDouble(2, amt);
 				psinsert.setString(3, time);
 				psinsert.setString(4, date);
-				psinsert.executeQuery();
+				psinsert.executeUpdate();
 			}
 			
-			else if(type=="entertainment") {
-				psinsert = con.prepareStatement("insert into entertaiment_details values(?,?,?,?)");
+			else if(type=="Entertainment") {
+				psinsert = con.prepareStatement("insert into entertainment_details values(?,?,?,?)");
 				psinsert.setInt(1, u_id);
 				psinsert.setDouble(2, amt);
 				psinsert.setString(3, time);
 				psinsert.setString(4, date);
-				psinsert.executeQuery();
+				psinsert.executeUpdate();
 			}
 			else {
 				psinsert = con.prepareStatement("insert into miscellaneous_details values(?,?,?,?)");
@@ -262,7 +291,7 @@ class DBUtils{
 				psinsert.setDouble(2, amt);
 				psinsert.setString(3, time);
 				psinsert.setString(4, date);
-				psinsert.executeQuery();
+				psinsert.executeUpdate();
 			}
 		}catch(Exception e) {e.printStackTrace();}
 	}
@@ -274,6 +303,23 @@ class DBUtils{
 			con=DriverManager.getConnection("jdbc:mysql://localhost:3306/javaproject","root","123456");
 			psinsert = con.prepareStatement("delete from debit_details where U_ID = ?");
 			psinsert.setInt(1, u_id);
+			psinsert.executeUpdate();
+		}catch(Exception e) {e.printStackTrace();}
+	}
+	
+	public static void setinfo(String bname, double bal) {
+		Connection con = null;
+		PreparedStatement psinsert = null;
+		try {
+			Class.forName("com.mysql.cj.jdbc.Driver");  
+			con=DriverManager.getConnection("jdbc:mysql://localhost:3306/javaproject","root","123456");
+			psinsert = con.prepareStatement("update user_details set bank_name = ? where U_ID = ?");
+			psinsert.setString(1, bname);
+			psinsert.setInt(2, u_id);
+			psinsert.executeUpdate();
+			psinsert = con.prepareStatement("insert into balance_details values(?,?)");
+			psinsert.setInt(1, u_id);
+			psinsert.setDouble(2, bal);
 			psinsert.executeUpdate();
 		}catch(Exception e) {e.printStackTrace();}
 	}
